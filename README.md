@@ -1,43 +1,52 @@
-# LearnFiber - Logging Libraries Demo
+# Đọc kỹ hướng dẫn sử dụng trước khi dùng. Bác sỹ hay bảo vậy.
 
-Dự án demo sử dụng Fiber framework để thử nghiệm các thư viện logging phổ biến trong Go.
+Vấn đề của chúng ta hiện này là gì:
+- Thường dùng hàm log thông thường để báo lỗi ra console. Khi lên production, không thể xem lại lịch sử lỗi
+- Log lỗi chung chung không biết dòng nào gây lỗi, danh sách các hàm gọi lồng nhau cũng không biết nốt
+- Không phân loại được lỗi. Lỗi validation khác lỗi hệ thống và lỗi panic đúng không?
+- Không cung cấp đủ thông tin về lỗi kiểu như giá trị biến tại thời điểm lỗi
+
+Tóm lại chúng ta code báo lỗi chỉ 
+
+Dự án demo về Error Handling và Logging System với Fiber framework.
 
 ## Mô tả
 
-Ứng dụng web này cho phép bạn thử nghiệm và so sánh 4 thư viện logging khác nhau:
+Ứng dụng web này demo cách xử lý lỗi chuyên nghiệp trong Go với:
 
-1. **log/slog** - Thư viện logging chuẩn của Go (từ Go 1.21)
-2. **sirupsen/logrus** - Structured logger phổ biến
-3. **uber-go/zap** - High-performance logger từ Uber
-4. **rs/zerolog** - Zero-allocation JSON logger
+1. **Custom Error Types** - Phân loại lỗi rõ ràng (Panic, System, External, Business, Validation, Auth)
+2. **Error Handler Middleware** - Xử lý lỗi tập trung với panic recovery
+3. **Dual Logger Strategy** - Console (development) + File (production)
+4. **Selective Logging** - Chỉ log lỗi nghiêm trọng vào file
+5. **Stack Trace Analysis** - Tự động phân tích call stack khi panic
 
 ## Tính năng
 
-Mỗi thư viện logging hiển thị đầy đủ thông tin:
+Hệ thống xử lý và logging cung cấp:
 
-- ✅ **Cấp độ lỗi** (Error level)
-- ✅ **Thông điệp lỗi** (Error message)
-- ✅ **Thông tin source code**: package, function, file, line number
-- ✅ **Stack trace** đầy đủ
-- ✅ **Các biến cục bộ**: user_id, user_name, request_path, request_method, etc.
-- ✅ **Timestamp** với định dạng chuẩn
+- ✅ **Panic Recovery**: Tự động bắt và xử lý panic
+- ✅ **Call Stack Tracking**: Trace đầy đủ call chain khi xảy ra panic
+- ✅ **Structured Logging**: JSON format với đầy đủ metadata
+- ✅ **Log Rotation**: Tự động rotate và nén file log
+- ✅ **Error Classification**: Phân loại lỗi theo mức độ nghiêm trọng
+- ✅ **Request Tracing**: Track error với request_id
+- ✅ **Location Detection**: Xác định chính xác nơi gây lỗi (file:line)
 
 ## Cài đặt
 
 ### Yêu cầu
 
 - Go 1.21 trở lên
-- npm (theo [[memory:8760137]])
 
 ### Các bước cài đặt
 
-1. Clone hoặc tạo dự án:
+1. Clone repository hoặc cd vào thư mục dự án:
 
 ```bash
 cd /Users/cuong/CODE/LearnFiber
 ```
 
-2. Cài đặt dependencies (đã được cài sẵn):
+2. Cài đặt dependencies:
 
 ```bash
 go mod download
@@ -46,7 +55,7 @@ go mod download
 3. Build ứng dụng:
 
 ```bash
-go build -o learnfiber main.go
+go build -o learnfiber
 ```
 
 ## Sử dụng
@@ -54,7 +63,7 @@ go build -o learnfiber main.go
 ### Chạy server
 
 ```bash
-go run main.go
+go run .
 ```
 
 Hoặc chạy file đã build:
@@ -67,88 +76,212 @@ Server sẽ khởi động tại: **http://localhost:8081**
 
 ### Các Endpoints
 
-| Endpoint | Thư viện | Mô tả |
-|----------|----------|-------|
-| `/` | - | Trang chủ với danh sách endpoints |
-| `/slog` | log/slog | Demo logging với slog |
-| `/logrus` | sirupsen/logrus | Demo logging với logrus |
-| `/zap` | uber-go/zap | Demo logging với zap |
-| `/zerolog` | rs/zerolog | Demo logging với zerolog |
+#### 🏠 Trang chủ
+- `GET /` - Trang chủ với UI đẹp, danh sách đầy đủ các endpoints
 
-### Ví dụ
+#### ⚡ Panic Errors (Lỗi nghiêm trọng - log vào file)
+| Endpoint | Mô tả | HTTP Code |
+|----------|-------|-----------|
+| `GET /panic/division` | Division by zero panic | 500 |
+| `GET /panic/index` | Index out of range panic | 500 |
+| `GET /panic/stack` | Deep call stack panic (X→Y→Z→W→GetElement) | 500 |
 
-1. Mở trình duyệt hoặc dùng curl:
+#### 💼 Business Errors (Lỗi logic nghiệp vụ)
+| Endpoint | Mô tả | HTTP Code |
+|----------|-------|-----------|
+| `GET /error/business?product_id=123` | Sản phẩm hết hàng | 404 |
+
+#### ✅ Validation Errors (Lỗi validation)
+| Endpoint | Mô tả | HTTP Code |
+|----------|-------|-----------|
+| `GET /error/validation` | Thiếu hoặc sai query params | 400 |
+| `POST /error/validation-body` | Validation request body | 400 |
+
+#### 🔐 Auth Errors (Lỗi xác thực)
+| Endpoint | Mô tả | HTTP Code |
+|----------|-------|-----------|
+| `GET /error/auth` | Missing/invalid token hoặc insufficient permissions | 401-403 |
+
+#### ⚙️ System Errors (Lỗi hệ thống - log vào file)
+| Endpoint | Mô tả | HTTP Code |
+|----------|-------|-----------|
+| `GET /error/system` | Database/filesystem error | 500 |
+
+#### 🌐 External Errors (Lỗi external service - log vào file)
+| Endpoint | Mô tả | HTTP Code |
+|----------|-------|-----------|
+| `GET /error/external?service=payment` | Payment gateway error | 502 |
+| `GET /error/external?service=shipping` | Shipping service unavailable | 503 |
+| `GET /error/external?service=notification` | Notification timeout | 504 |
+
+### Ví dụ sử dụng
 
 ```bash
-# Xem danh sách endpoints
-curl http://localhost:8081/
+# 1. Mở trang chủ trong browser
+open http://localhost:8081/
 
-# Test log/slog
-curl http://localhost:8081/slog
+# 2. Test Panic Errors
+curl http://localhost:8081/panic/division
+curl http://localhost:8081/panic/index
+curl http://localhost:8081/panic/stack
 
-# Test sirupsen/logrus
-curl http://localhost:8081/logrus
+# 3. Test Business Errors
+curl http://localhost:8081/error/business?product_id=123
 
-# Test uber-go/zap
-curl http://localhost:8081/zap
+# 4. Test Validation Errors
+curl http://localhost:8081/error/validation
+curl "http://localhost:8081/error/validation?age=abc"
+curl "http://localhost:8081/error/validation?age=15"
+curl "http://localhost:8081/error/validation?age=25"
 
-# Test rs/zerolog
-curl http://localhost:8081/zerolog
+# 5. Test Validation Body
+curl -X POST http://localhost:8081/error/validation-body \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John","email":"john@test.com","age":25}'
+
+# 6. Test Auth Errors
+curl http://localhost:8081/error/auth
+curl -H "Authorization: Bearer valid-token-123" \
+     -H "X-User-Role: admin" \
+     http://localhost:8081/error/auth
+
+# 7. Test System Errors
+curl http://localhost:8081/error/system
+
+# 8. Test External Errors
+curl http://localhost:8081/error/external?service=payment
+curl http://localhost:8081/error/external?service=shipping
+curl http://localhost:8081/error/external?service=notification
 ```
 
-2. Kiểm tra console/terminal để xem log output chi tiết
+### Xem Log Output
 
-## So sánh các thư viện
+Kiểm tra console để xem log chi tiết:
+- **Console**: Tất cả lỗi được log ra console với màu sắc
+- **File**: Chỉ lỗi nghiêm trọng (Panic, System, External) được log vào `logs/errors.log`
 
-### log/slog
-- ✅ Built-in, không cần dependency ngoài
-- ✅ JSON handler với structured logging
-- ✅ Hỗ trợ context
-- ✅ AddSource option cho caller info
+```bash
+# Xem log file realtime
+tail -f logs/errors.log
 
-### sirupsen/logrus
-- ✅ Structured logging với Fields
-- ✅ Pretty print JSON
-- ✅ Nhiều formatter có sẵn
-- ✅ SetReportCaller() cho caller info
+# Parse JSON log với jq
+cat logs/errors.log | jq '.'
+```
 
-### uber-go/zap
-- ✅ High-performance, zero-allocation
-- ✅ Structured logging
-- ✅ Tự động thêm stack trace ở error level
-- ✅ Color-coded output trong development mode
+## Kiến Trúc
 
-### rs/zerolog
-- ✅ Zero-allocation JSON logger
-- ✅ Fluent API (chainable methods)
-- ✅ Console writer với pretty format
-- ✅ Rất nhanh và hiệu quả về memory
+### Phân loại lỗi (Error Types)
+
+| Error Type | Mã HTTP | Mức độ | Log vào File? |
+|------------|---------|---------|---------------|
+| **PanicError** | 500 | Critical | ✅ Có |
+| **SystemError** | 500 | Critical | ✅ Có |
+| **ExternalError** | 502-504 | Critical | ✅ Có |
+| **BusinessError** | 4xx | Warning | ❌ Không |
+| **ValidationError** | 400 | Warning | ❌ Không |
+| **AuthError** | 401-403 | Info | ❌ Không |
+
+### Luồng xử lý lỗi
+
+1. **Request** → Fiber Router → Handler
+2. **Handler** throws error hoặc panic
+3. **ErrorHandlerMiddleware** bắt error/panic
+4. **Classification**: Xác định loại error
+5. **Logging**: 
+   - Console: Log tất cả
+   - File: Chỉ log critical errors
+6. **Response**: Trả JSON error cho client
+
+### Dual Logger Strategy
+
+```
+┌─────────────────────────────────────┐
+│   ErrorHandlerMiddleware            │
+│                                     │
+│   ┌──────────────────────────┐     │
+│   │  Console Logger          │     │
+│   │  - Tất cả lỗi           │     │
+│   │  - Màu sắc, dễ đọc      │     │
+│   │  - Development mode      │     │
+│   └──────────────────────────┘     │
+│                                     │
+│   ┌──────────────────────────┐     │
+│   │  File Logger             │     │
+│   │  - Chỉ lỗi nghiêm trọng │     │
+│   │  - JSON format           │     │
+│   │  - Auto rotation         │     │
+│   │  - Production mode       │     │
+│   └──────────────────────────┘     │
+└─────────────────────────────────────┘
+```
 
 ## Cấu trúc dự án
 
 ```
 LearnFiber/
-├── main.go          # File chính chứa tất cả code
-├── go.mod           # Go module definition
-├── go.sum           # Go dependencies checksums
-├── learnfiber       # Compiled binary
-└── README.md        # File này
+├── main.go              # Entry point, routes, handlers
+├── error_handler.go     # Custom error types, middleware, log handlers
+├── logger_config.go     # Dual logger configuration
+├── call_stack_log.go    # Stack trace analysis utilities
+├── templates/
+│   └── home.html        # Beautiful UI homepage
+├── logs/
+│   ├── errors.log       # JSON log file (auto-rotated)
+│   └── errors.log.*.gz  # Compressed backups
+├── go.mod               # Module definition
+├── go.sum               # Dependencies checksums
+├── learnfiber           # Compiled binary
+├── README.md            # Documentation (this file)
+└── LOGGING_GUIDE.md     # Detailed logging guide
 ```
 
 ## Dependencies
 
-```
-github.com/gofiber/fiber/v2 v2.52.9
-github.com/sirupsen/logrus v1.9.3
-go.uber.org/zap v1.27.0
-github.com/rs/zerolog v1.34.0
+```go
+github.com/gofiber/fiber/v2 v2.52.9       // Web framework
+github.com/sirupsen/logrus v1.9.3         // Structured logger
+gopkg.in/natefinch/lumberjack.v2 v2.2.1   // Log rotation
 ```
 
-## Ghi chú
+## Công Nghệ Sử Dụng
 
-- Mỗi endpoint sẽ log ra console với format riêng của từng thư viện
-- Tất cả đều hiển thị error message, source location, local variables và stack trace
-- Code được tổ chức rõ ràng với comment để dễ học tập và tham khảo
+- **Fiber v2**: Fast HTTP framework, Express-style API
+- **Logrus**: Structured logger với JSON formatter
+- **Lumberjack**: Log rotation và compression
+- **Runtime/Debug**: Stack trace analysis
+- **HTML Templates**: Server-side rendering
+
+## Tính Năng Nổi Bật
+
+### 1. Panic Recovery với Call Stack Tracking
+Khi xảy ra panic, hệ thống tự động:
+- Bắt panic và recover
+- Phân tích stack trace
+- Xác định chính xác dòng code gây lỗi
+- Log đầy đủ call chain
+- Trả response thân thiện cho client
+
+### 2. Selective Logging
+- **Console**: Log tất cả lỗi cho development
+- **File**: Chỉ log lỗi nghiêm trọng (Panic, System, External)
+- Tiết kiệm disk space và dễ monitoring
+
+### 3. Log Rotation
+- Auto rotate khi file đạt 10MB
+- Giữ tối đa 5 backups
+- Compress backups thành .gz
+- Xóa file cũ hơn 30 ngày
+
+### 4. Request Tracing
+Mỗi request có `request_id` unique để trace:
+```json
+{
+  "request_id": "36b9d7d9-9752-4831-aee0-01eee86a41f3",
+  "request_path": "GET /panic/index",
+  "error_type": "PANIC",
+  "message": "Panic recovered: runtime error: index out of range"
+}
+```
 
 ## License
 

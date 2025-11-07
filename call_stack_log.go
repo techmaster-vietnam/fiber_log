@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
+	"runtime"
 	"runtime/debug"
 	"strings"
 )
@@ -42,50 +44,6 @@ func getActualPanicLocation() (file string, line int, function string) {
 			if idx := strings.Index(function, "("); idx > 0 {
 				function = function[:idx]
 			}
-
-			// Dòng tiếp theo chứa file:line
-			if i+1 < len(lines) {
-				locationLine := strings.TrimSpace(lines[i+1])
-
-				// Parse file và line
-				// Format: /path/to/main.go:XXX +0x...
-				parts := strings.Fields(locationLine)
-				if len(parts) > 0 {
-					fileAndLine := parts[0]
-					if idx := strings.LastIndex(fileAndLine, ":"); idx > 0 {
-						file = fileAndLine[:idx]
-						fmt.Sscanf(fileAndLine[idx+1:], "%d", &line)
-					}
-				}
-			}
-			break
-		}
-	}
-
-	if file == "" {
-		return "unknown", 0, "unknown"
-	}
-
-	return file, line, function
-}
-
-// getPanicLocationForHandler lấy thông tin chính xác về dòng gây panic từ stack trace
-// handlerName: tên handler như "logrusHandler", "slogHandler", "zapHandler", "zerologHandler"
-func getPanicLocationForHandler(handlerName string) (file string, line int, function string) {
-	// Lấy stack trace từ debug.Stack()
-	stack := string(debug.Stack())
-	lines := strings.Split(stack, "\n")
-
-	// Tìm pattern "main.<handlerName>(" nhưng KHÔNG phải "main.<handlerName>.func1"
-	pattern := "main." + handlerName + "("
-
-	// Tìm từ đầu stack trace
-	for i := 0; i < len(lines); i++ {
-		l := strings.TrimSpace(lines[i])
-
-		// Tìm pattern nhưng không phải func1 (defer function)
-		if strings.HasPrefix(l, pattern) && !strings.Contains(l, "func1") {
-			function = "main." + handlerName
 
 			// Dòng tiếp theo chứa file:line
 			if i+1 < len(lines) {
@@ -173,4 +131,28 @@ func formatStackTraceArray() []string {
 
 	// Thứ tự tự nhiên của stack trace: từ nơi gây lỗi lên handler
 	return callChain
+}
+
+// getCallerInfo lấy thông tin về nơi gọi factory function
+// skip = 1: hàm gọi trực tiếp (default)
+// skip = 2: hàm gọi hàm gọi factory function
+func getCallerInfo(skip int) (file string, line int, function string) {
+	// skip + 1 để bỏ qua chính hàm getCallerInfo này
+	pc, file, line, ok := runtime.Caller(skip + 1)
+	if !ok {
+		return "unknown", 0, "unknown"
+	}
+
+	// Lấy tên function
+	fn := runtime.FuncForPC(pc)
+	if fn != nil {
+		function = fn.Name()
+	} else {
+		function = "unknown"
+	}
+
+	// Chỉ lấy tên file, bỏ đường dẫn đầy đủ
+	file = filepath.Base(file)
+
+	return file, line, function
 }

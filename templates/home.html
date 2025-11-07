@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnFiber - Error Handling Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .section {
+            margin-bottom: 35px;
+        }
+        .section-title {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .error-list {
+            list-style: none;
+        }
+        .error-item {
+            margin-bottom: 12px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .error-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        .error-link {
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        .error-link:hover {
+            color: #764ba2;
+        }
+        .error-desc {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .method {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        .method-get { background: #28a745; color: white; }
+        .method-post { background: #007bff; color: white; }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge-panic { background: #dc3545; color: white; }
+        .badge-4xx { background: #ffc107; color: #333; }
+        .badge-5xx { background: #dc3545; color: white; }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        .note strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 LearnFiber - Error Handling Demo</h1>
+        <p class="subtitle">Demo các loại xử lý lỗi với Middleware Pattern và Custom Error Types</p>
+        
+        <div class="section">
+            <h2 class="section-title">⚡ Panic Errors (Recovered)</h2>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/panic/division" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /panic/division
+                        <span class="badge badge-panic">PANIC</span>
+                    </a>
+                    <div class="error-desc">
+                        ❌ Lỗi chia cho 0 - Demo panic recovery với lỗi runtime cơ bản
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/panic/index" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /panic/index
+                        <span class="badge badge-panic">PANIC</span>
+                    </a>
+                    <div class="error-desc">
+                        ❌ Index out of range - Demo panic khi truy cập mảng ngoài phạm vi
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/panic/stack" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /panic/stack
+                        <span class="badge badge-panic">PANIC</span>
+                    </a>
+                    <div class="error-desc">
+                        ❌ Deep call stack - Demo panic trong chuỗi gọi hàm nhiều tầng (X→Y→Z→W→GetElement)
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">💼 Business Errors (4xx)</h2>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/error/business?product_id=123" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /error/business?product_id=123
+                        <span class="badge badge-4xx">404</span>
+                    </a>
+                    <div class="error-desc">
+                        🛒 Lỗi business logic - Sản phẩm hết hàng (thử với product_id khác để thành công)
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">✅ Validation Errors (400)</h2>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/error/validation" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /error/validation
+                        <span class="badge badge-4xx">400</span>
+                    </a>
+                    <div class="error-desc">
+                        📝 Thiếu query param - Thử thêm ?age=25 để thành công, ?age=15 sẽ lỗi (tuổi < 18)
+                    </div>
+                </li>
+                <li class="error-item">
+                    <span class="error-link">
+                        <span class="method method-post">POST</span>
+                        /error/validation-body
+                        <span class="badge badge-4xx">400</span>
+                    </span>
+                    <div class="error-desc">
+                        📝 Validation request body - Test bằng curl hoặc Postman:<br>
+                        <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">
+                        curl -X POST http://localhost:8081/error/validation-body -H "Content-Type: application/json" -d '{"name":"John","email":"john@test.com","age":25}'
+                        </code>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🔐 Authentication/Authorization Errors (401-403)</h2>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/error/auth" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /error/auth
+                        <span class="badge badge-4xx">401</span>
+                    </a>
+                    <div class="error-desc">
+                        🔒 Thiếu token - Thử với header: Authorization: Bearer valid-token-123 và X-User-Role: admin để thành công
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">🌐 External Service Errors (502-504)</h2>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/error/external?service=payment" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /error/external?service=payment
+                        <span class="badge badge-5xx">502</span>
+                    </a>
+                    <div class="error-desc">
+                        💳 Payment gateway không phản hồi - Demo lỗi từ external API
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/error/external?service=shipping" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /error/external?service=shipping
+                        <span class="badge badge-5xx">503</span>
+                    </a>
+                    <div class="error-desc">
+                        📦 Shipping service đang bảo trì - Demo service unavailable
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/error/external?service=notification" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /error/external?service=notification
+                        <span class="badge badge-5xx">504</span>
+                    </a>
+                    <div class="error-desc">
+                        📧 Notification service timeout - Demo gateway timeout
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">⚙️ System Errors (500)</h2>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/error/system" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /error/system
+                        <span class="badge badge-5xx">500</span>
+                    </a>
+                    <div class="error-desc">
+                        🗄️ Database connection failed - Demo lỗi hệ thống internal
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <strong>📌 Lưu ý:</strong> Tất cả lỗi đều được xử lý tự động bởi ErrorHandlerMiddleware 
+            và log ra console với đầy đủ thông tin (request_id, error_type, location, call_chain, etc.)
+        </div>
+    </div>
+</body>
+</html>
+
