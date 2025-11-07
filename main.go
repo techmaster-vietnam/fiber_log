@@ -36,7 +36,7 @@ func initTemplates() {
 // ============================================================================
 func main() {
 	app := fiber.New(fiber.Config{
-		AppName: "LearnFiber - Logrus Demo",
+		AppName: "FiberLog - Logrus Demo",
 	})
 
 	// Middleware

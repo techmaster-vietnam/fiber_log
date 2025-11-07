@@ -29,7 +29,7 @@ Sau một ngày hì hục ra lệnh cho AI tôi đã xong thư viện log lỗi 
 1. Clone repository hoặc cd vào thư mục dự án:
 
 ```bash
-cd /Users/cuong/CODE/LearnFiber
+cd /Users/cuong/CODE/fiber_log
 ```
 
 2. Cài đặt dependencies:
@@ -41,7 +41,7 @@ go mod tidy
 3. Build ứng dụng:
 
 ```bash
-go build -o learnfiber
+go build -o fiber_log
 ```
 
 ## Sử dụng
@@ -54,7 +54,7 @@ go run .
 Hoặc chạy file đã build:
 
 ```bash
-./learnfiber
+./fiber_log
 ```
 
 Server sẽ khởi động tại: **http://localhost:8081**. Mở trang web ra mà nghịch cho nhanh.
@@ -117,7 +117,7 @@ Kiểm tra console để xem log chi tiết:
 ## Cấu trúc dự án
 
 ```
-LearnFiber/
+fiber_log/
 ├── main.go              # Entry point, routes, handlers
 ├── error_handler.go     # Custom error types, middleware, log handlers
 ├── logger_config.go     # Dual logger configuration
@@ -129,7 +129,7 @@ LearnFiber/
 │   └── errors.log.*.gz  # Compressed backups
 ├── go.mod               # Module definition
 ├── go.sum               # Dependencies checksums
-├── learnfiber           # Compiled binary
+├── fiber_log            # Compiled binary
 ├── README.md            # Documentation (this file)
 └── LOGGING_GUIDE.md     # Detailed logging guide
 ```

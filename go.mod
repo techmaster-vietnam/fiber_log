@@ -1,4 +1,4 @@
-module learnfiber
+module fiber_log
 
 go 1.25.3
 
