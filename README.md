@@ -10,6 +10,8 @@ Tóm lại chúng ta code báo lỗi chỉ debug khi phát triển chứ không 
 
 Sau một ngày hì hục ra lệnh cho AI tôi đã xong thư viện log lỗi sử dụng lại  hai thư viện chính là "sirupsen/logrus" log ra json và "lumberjack.v2" để nén file log
 
+![](error.png)
+
 ## Tính năng
 1. **Custom Error Types** - Phân loại lỗi rõ ràng (Panic, System, External, Business, Validation, Auth)
 2. **Error Handler Middleware** - Xử lý lỗi tập trung với panic recovery
