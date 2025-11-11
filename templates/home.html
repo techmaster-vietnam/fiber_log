@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LearnFiber - Error Handling Demo</title>
+    <title>FiberLog - GoErrorKit Demo with Multi-Layer Architecture</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -79,6 +79,7 @@
         }
         .method-get { background: #28a745; color: white; }
         .method-post { background: #007bff; color: white; }
+        .method-delete { background: #dc3545; color: white; }
         .badge {
             display: inline-block;
             padding: 3px 8px;
@@ -100,12 +101,111 @@
         .note strong {
             color: #856404;
         }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 700px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s;
+        }
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.3em;
+        }
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close:hover {
+            opacity: 0.7;
+        }
+        .modal-body {
+            padding: 25px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .response-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border-left: 4px solid #667eea;
+        }
+        .status-success {
+            border-left-color: #28a745;
+        }
+        .status-error {
+            border-left-color: #dc3545;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .clickable {
+            cursor: pointer;
+        }
+        .clickable:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 LearnFiber - Error Handling Demo</h1>
-        <p class="subtitle">Demo các loại xử lý lỗi với Middleware Pattern và Custom Error Types</p>
+        <h1>🚀 FiberLog - GoErrorKit Demo</h1>
+        <p class="subtitle">Demo GoErrorKit với Multi-Layer Architecture - Error tracking từ Service Layer đến API Layer</p>
         
         <div class="section">
             <h2 class="section-title">⚡ Panic Errors (Recovered)</h2>
@@ -144,7 +244,122 @@
         </div>
 
         <div class="section">
-            <h2 class="section-title">💼 Business Errors (4xx)</h2>
+            <h2 class="section-title">📦 Service Layer Errors - Demo GoErrorKit với Package khác</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">
+                ✨ <strong>Errors được throw từ <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">services/</code> package</strong> - 
+                GoErrorKit sẽ báo chính xác file, line, function nơi lỗi xảy ra!
+            </p>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/product/999" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /product/999
+                        <span class="badge badge-4xx">404</span>
+                    </a>
+                    <div class="error-desc">
+                        🔍 <strong>BusinessError từ ProductService.GetProduct</strong><br>
+                        Sản phẩm không tồn tại → Error từ <code style="background:#e9ecef;padding:2px 4px;border-radius:3px;">services/product_service.go</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/product/123/check-stock" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /product/123/check-stock
+                        <span class="badge badge-4xx">400</span>
+                    </a>
+                    <div class="error-desc">
+                        📉 <strong>BusinessError từ ProductService.CheckStock</strong><br>
+                        Sản phẩm hết hàng (iPhone 15) → Error từ <code style="background:#e9ecef;padding:2px 4px;border-radius:3px;">CheckStock function</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <span class="error-link" data-url="/product/456/reserve?quantity=10" data-method="POST">
+                        <span class="method method-post">POST</span>
+                        /product/456/reserve?quantity=10
+                        <span class="badge badge-4xx">400</span>
+                    </span>
+                    <div class="error-desc">
+                        ⚠️ <strong>ValidationError từ ProductService.ReserveProduct</strong><br>
+                        Không đủ hàng (yêu cầu 10, chỉ còn 5) → Error từ <code style="background:#e9ecef;padding:2px 4px;border-radius:3px;">ReserveProduct function</code><br>
+                        <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">curl -X POST "http://localhost:8081/product/456/reserve?quantity=10"</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/product/456/discount?percent=150" class="error-link">
+                        <span class="method method-get">GET</span>
+                        /product/456/discount?percent=150
+                        <span class="badge badge-4xx">400</span>
+                    </a>
+                    <div class="error-desc">
+                        💯 <strong>ValidationError từ ProductService.CalculateDiscount</strong><br>
+                        Phần trăm giảm giá không hợp lệ (max 100) → Error từ <code style="background:#e9ecef;padding:2px 4px;border-radius:3px;">CalculateDiscount function</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <span class="error-link" data-url="/order/create?product_id=123&quantity=1" data-method="POST">
+                        <span class="method method-post">POST</span>
+                        /order/create?product_id=123&quantity=1
+                        <span class="badge badge-4xx">400</span>
+                    </span>
+                    <div class="error-desc">
+                        🛒 <strong>Error propagate qua OrderService</strong><br>
+                        OrderService → ProductService → CheckStock (hết hàng) → Error từ deep call stack<br>
+                        <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">curl -X POST "http://localhost:8081/order/create?product_id=123&quantity=1"</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <span class="error-link" data-url="/order/create?product_id=456&quantity=0" data-method="POST">
+                        <span class="method method-post">POST</span>
+                        /order/create?product_id=456&quantity=0
+                        <span class="badge badge-4xx">400</span>
+                    </span>
+                    <div class="error-desc">
+                        🔢 <strong>ValidationError từ OrderService.CreateOrder</strong><br>
+                        Số lượng phải > 0 → Error từ <code style="background:#e9ecef;padding:2px 4px;border-radius:3px;">services/order_service.go</code><br>
+                        <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">curl -X POST "http://localhost:8081/order/create?product_id=456&quantity=0"</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <span class="error-link" data-url="/order/ORD-shipped/cancel" data-method="DELETE">
+                        <span class="method method-delete">DELETE</span>
+                        /order/ORD-shipped/cancel
+                        <span class="badge badge-4xx">400</span>
+                    </span>
+                    <div class="error-desc">
+                        🚫 <strong>BusinessError từ OrderService.CancelOrder</strong><br>
+                        Không thể hủy đơn đã ship → Error từ <code style="background:#e9ecef;padding:2px 4px;border-radius:3px;">CancelOrder function</code><br>
+                        <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">curl -X DELETE "http://localhost:8081/order/ORD-shipped/cancel"</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <span class="error-link" data-url="/order/ORD-invalid-card/payment?amount=100" data-method="POST">
+                        <span class="method method-post">POST</span>
+                        /order/ORD-invalid-card/payment?amount=100
+                        <span class="badge badge-5xx">502</span>
+                    </span>
+                    <div class="error-desc">
+                        💳 <strong>ExternalError từ deep call stack</strong><br>
+                        OrderService → callPaymentGateway → Thẻ không hợp lệ → Error từ private function<br>
+                        <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">curl -X POST "http://localhost:8081/order/ORD-invalid-card/payment?amount=100"</code>
+                    </div>
+                </li>
+                <li class="error-item">
+                    <span class="error-link" data-url="/order/ORD-123/payment?amount=20000" data-method="POST">
+                        <span class="method method-post">POST</span>
+                        /order/ORD-123/payment?amount=20000
+                        <span class="badge badge-5xx">504</span>
+                    </span>
+                    <div class="error-desc">
+                        ⏱️ <strong>ExternalError - Payment Gateway Timeout</strong><br>
+                        Giao dịch quá lớn cần xác nhận → Error từ <code style="background:#e9ecef;padding:2px 4px;border-radius:3px;">callPaymentGateway</code><br>
+                        <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">curl -X POST "http://localhost:8081/order/ORD-123/payment?amount=20000"</code>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">💼 Business Errors - Basic (4xx)</h2>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/error/business?product_id=123" class="error-link">
@@ -153,7 +368,7 @@
                         <span class="badge badge-4xx">404</span>
                     </a>
                     <div class="error-desc">
-                        🛒 Lỗi business logic - Sản phẩm hết hàng (thử với product_id khác để thành công)
+                        🛒 Lỗi business logic - Sản phẩm hết hàng (gọi service layer)
                     </div>
                 </li>
             </ul>
@@ -173,15 +388,15 @@
                     </div>
                 </li>
                 <li class="error-item">
-                    <span class="error-link">
+                    <span class="error-link" data-url="/error/validation-body" data-method="POST">
                         <span class="method method-post">POST</span>
                         /error/validation-body
                         <span class="badge badge-4xx">400</span>
                     </span>
                     <div class="error-desc">
-                        📝 Validation request body - Test bằng curl hoặc Postman:<br>
+                        📝 Validation request body - Click để test validation body (gửi body rỗng để test error)<br>
                         <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">
-                        curl -X POST http://localhost:8081/error/validation-body -H "Content-Type: application/json" -d '{"name":"John","email":"john@test.com","age":25}'
+                        Hoặc: curl -X POST http://localhost:8081/error/validation-body -H "Content-Type: application/json" -d '{"name":"John","email":"john@test.com","age":25}'
                         </code>
                     </div>
                 </li>
@@ -260,7 +475,134 @@
             <strong>📌 Lưu ý:</strong> Tất cả lỗi đều được xử lý tự động bởi ErrorHandlerMiddleware 
             và log ra console với đầy đủ thông tin (request_id, error_type, location, call_chain, etc.)
         </div>
+
+        <div class="note" style="background: #d1ecf1; border-left-color: #0c5460; margin-top: 15px;">
+            <strong style="color: #0c5460;">🎯 Điểm đặc biệt của GoErrorKit:</strong><br>
+            Với <strong>Service Layer Errors</strong> section phía trên, errors được throw từ package <code style="background:#b8daff;padding:2px 6px;border-radius:3px;">services/</code> 
+            nhưng GoErrorKit vẫn báo <strong>chính xác</strong>:<br>
+            ✅ File: <code style="background:#b8daff;padding:2px 4px;border-radius:3px;">product_service.go</code> hoặc <code style="background:#b8daff;padding:2px 4px;border-radius:3px;">order_service.go</code><br>
+            ✅ Line number: Dòng thực sự throw error<br>
+            ✅ Function: <code style="background:#b8daff;padding:2px 4px;border-radius:3px;">CheckStock</code>, <code style="background:#b8daff;padding:2px 4px;border-radius:3px;">ReserveProduct</code>, etc.<br>
+            ✅ Full call stack từ nơi error xảy ra<br><br>
+            👉 Check file <code style="background:#b8daff;padding:2px 6px;border-radius:3px;">logs/errors.log</code> để xem chi tiết!
+        </div>
     </div>
+
+    <!-- Modal để hiển thị response -->
+    <div id="responseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Response</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Hàm gửi request (GET, POST, DELETE)
+        async function sendRequest(url, method = 'GET') {
+            const modal = document.getElementById('responseModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            // Hiển thị modal với loading
+            modal.style.display = 'block';
+            modalTitle.textContent = `${method} ${url}`;
+            modalBody.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Sending ${method} request...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                // Hiển thị response
+                const statusClass = response.ok ? 'status-success' : 'status-error';
+                const statusEmoji = response.ok ? '✅' : '❌';
+                
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <strong>${statusEmoji} Status:</strong> ${response.status} ${response.statusText}
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>📄 Response:</strong>
+                    </div>
+                    <div class="response-box ${statusClass}">
+${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}
+                    </div>
+                `;
+            } catch (error) {
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <strong>❌ Error:</strong> Failed to send request
+                    </div>
+                    <div class="response-box status-error">
+${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Đóng modal
+        function closeModal() {
+            document.getElementById('responseModal').style.display = 'none';
+        }
+        
+        // Đóng modal khi click outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('responseModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // Xử lý click trên các link
+        document.addEventListener('DOMContentLoaded', function() {
+            // Thêm event listener cho các link có data-url và data-method
+            document.querySelectorAll('.error-link[data-url]').forEach(link => {
+                const url = link.getAttribute('data-url');
+                const method = link.getAttribute('data-method') || 'POST';
+                
+                // Thêm class clickable
+                link.classList.add('clickable');
+                
+                // Thêm event listener
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    sendRequest(url, method);
+                });
+            });
+            
+            // Các link GET vẫn hoạt động bình thường (mở tab mới)
+            document.querySelectorAll('a.error-link').forEach(link => {
+                if (link.href && !link.hasAttribute('data-url')) {
+                    link.setAttribute('target', '_blank');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 
