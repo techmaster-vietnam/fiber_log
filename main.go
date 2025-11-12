@@ -104,6 +104,7 @@ func main() {
 
 	// Routes - Home
 	app.Get("/", homeHandler)
+	app.Get("/favicon.ico", faviconHandler)
 
 	// Routes - Panic Errors
 	app.Get("/panic/division", panicDivisionHandler)
@@ -118,6 +119,12 @@ func main() {
 	app.Get("/error/auth", authErrorHandler)
 	app.Get("/error/external", externalErrorHandler)
 	app.Get("/error/complex", complexErrorWithCallChainHandler)
+
+	// Routes - Wrap Errors (GoErrorKit v0.1.5)
+	app.Get("/error/wrap", wrapErrorHandler)
+	app.Get("/error/wrap-message", wrapWithMessageHandler)
+	app.Get("/error/wrap-data", wrapWithDataHandler)
+	app.Get("/error/wrap-callchain", wrapWithCallChainHandler)
 
 	// Routes - Service Layer Errors (Demo lỗi từ package khác)
 	app.Get("/product/:id", getProductHandler)
@@ -144,6 +151,11 @@ func main() {
 	fmt.Println("  GET  /error/auth                          - Auth error (token)")
 	fmt.Println("  GET  /error/external?service=payment      - External API error")
 	fmt.Println("  GET  /error/complex                       - Complex error WITH call_chain ⭐")
+	fmt.Println("\n  🔄 Wrap Errors (v0.1.5):")
+	fmt.Println("  GET  /error/wrap                          - Wrap(err) - Wrap error cơ bản")
+	fmt.Println("  GET  /error/wrap-message                  - WrapWithMessage(err, msg) - Thêm Context")
+	fmt.Println("  GET  /error/wrap-data                     - Wrap + WithData - Thêm Metadata")
+	fmt.Println("  GET  /error/wrap-callchain                - Wrap + WithCallChain - Debug Phức Tạp")
 	fmt.Println("\n  🛍️  Service Layer Demos:")
 	fmt.Println("  GET  /product/999                         - Product not found")
 	fmt.Println("  GET  /product/123/check-stock             - Stock check (hết hàng)")
@@ -162,6 +174,11 @@ func main() {
 func homeHandler(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	return homeTemplate.Execute(c.Response().BodyWriter(), nil)
+}
+
+func faviconHandler(c *fiber.Ctx) error {
+	c.Set("Content-Type", "image/svg+xml")
+	return c.SendFile("templates/favicon.svg")
 }
 
 // ============================================================================
@@ -600,6 +617,148 @@ func checkInventoryData() error {
 				"warehouse":  "WH-01",
 			}).
 			WithCallChain() // ⭐ Thêm call_chain để trace flow
+	}
+
+	return nil
+}
+
+// ============================================================================
+// Wrap Error Handlers - Demo GoErrorKit v0.1.5 Wrap Functions
+// ============================================================================
+
+// wrapErrorHandler - Demo Wrap(err) - Wrap error cơ bản
+// Wrap một error thông thường thành GoErrorKit error để có đầy đủ thông tin logging
+//
+// Test: GET /error/wrap
+func wrapErrorHandler(c *fiber.Ctx) error {
+	// Giả lập một error từ thư viện bên thứ 3 hoặc standard library
+	originalErr := fmt.Errorf("file not found: config.json")
+
+	// ⭐ Wrap error cơ bản - Chuyển error thông thường thành GoErrorKit error
+	// GoErrorKit sẽ tự động capture location và stack trace
+	wrappedErr := goerrorkit.Wrap(originalErr)
+
+	return wrappedErr
+}
+
+// wrapWithMessageHandler - Demo WrapWithMessage(err, msg) - Thêm Context
+// Wrap error và thêm message/context để làm rõ ngữ cảnh lỗi xảy ra
+//
+// Test: GET /error/wrap-message
+func wrapWithMessageHandler(c *fiber.Ctx) error {
+	// Giả lập error từ database query
+	dbErr := fmt.Errorf("connection timeout")
+
+	// ⭐ WrapWithMessage - Thêm context message để làm rõ ngữ cảnh
+	// Message này sẽ được thêm vào error response và log
+	wrappedErr := goerrorkit.WrapWithMessage(dbErr, "Không thể kết nối đến database để lấy thông tin user")
+
+	return wrappedErr
+}
+
+// wrapWithDataHandler - Demo Wrap + WithData - Thêm Metadata
+// Wrap error và thêm metadata để cung cấp thêm thông tin debug
+//
+// Test: GET /error/wrap-data
+func wrapWithDataHandler(c *fiber.Ctx) error {
+	// Giả lập error từ external API call
+	apiErr := fmt.Errorf("HTTP 500: Internal Server Error")
+
+	// ⭐ Wrap + WithData - Kết hợp wrap error với metadata
+	// Metadata sẽ được log và trả về trong error response
+	wrappedErr := goerrorkit.Wrap(apiErr).
+		WithData(map[string]interface{}{
+			"api_endpoint": "https://api.example.com/users",
+			"method":       "GET",
+			"user_id":      "USER-123",
+			"retry_count":  3,
+			"timeout":      "30s",
+		})
+
+	return wrappedErr
+}
+
+// wrapWithCallChainHandler - Demo Wrap + WithCallChain - Debug Phức Tạp
+// Wrap error và thêm call chain để trace được flow của error qua nhiều function
+//
+// Test: GET /error/wrap-callchain
+func wrapWithCallChainHandler(c *fiber.Ctx) error {
+	// Simulate complex operation với nhiều function calls
+	result, err := processUserData()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Xử lý user data thành công",
+		"result":  result,
+	})
+}
+
+func processUserData() (string, error) {
+	// Call validation
+	if err := validateUserData(); err != nil {
+		return "", err
+	}
+
+	// Call external service
+	if err := callExternalService(); err != nil {
+		return "", err
+	}
+
+	return "success", nil
+}
+
+func validateUserData() error {
+	// Giả lập validation - luôn fail để demo error
+	// Trong thực tế, hàm này có thể return nil nếu validation pass
+	email := "invalid-email" // Demo: email không hợp lệ
+
+	// Kiểm tra validation - trong demo này luôn fail
+	if !isValidEmail(email) {
+		validationErr := fmt.Errorf("email format invalid")
+
+		// ⭐ Wrap + WithCallChain - Wrap error và thêm call chain
+		// Call chain sẽ giúp trace: wrapWithCallChainHandler → processUserData → validateUserData
+		wrappedErr := goerrorkit.Wrap(validationErr).
+			WithCallChain().
+			WithData(map[string]interface{}{
+				"field":  "email",
+				"value":  email,
+				"reason": "missing @ symbol",
+			})
+
+		return wrappedErr
+	}
+
+	return nil
+}
+
+func isValidEmail(email string) bool {
+	// Demo function - luôn return false để demo error
+	return false
+}
+
+func callExternalService() error {
+	// Giả lập error từ external API - luôn fail để demo error
+	// Trong thực tế, hàm này có thể return nil nếu call thành công
+	serviceAvailable := false // Demo: service không khả dụng
+
+	if !serviceAvailable {
+		apiErr := fmt.Errorf("service unavailable")
+
+		// ⭐ Wrap + WithCallChain + WithData - Kết hợp tất cả
+		// Có đầy đủ: wrapped error, call chain, và metadata
+		wrappedErr := goerrorkit.WrapWithMessage(apiErr, "External service không khả dụng khi gọi API").
+			WithCallChain().
+			WithData(map[string]interface{}{
+				"service":     "user-service",
+				"endpoint":    "/api/v1/users/validate",
+				"status_code": 503,
+				"retry_after": "60s",
+			})
+
+		return wrappedErr
 	}
 
 	return nil

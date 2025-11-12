@@ -5,81 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FiberLog - GoErrorKit Demo with Multi-Layer Architecture</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-        .container {
-            max-width: 900px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px 20px;
+            background: #f8f9fa;
+            color: #212529;
         }
-        h1 {
-            color: #333;
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .header h1 {
+            color: #FF6B6B;
+            font-size: 3em;
             margin-bottom: 10px;
-            font-size: 2em;
         }
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1em;
+        .header p {
+            color: #6c757d;
+            font-size: 1.2em;
         }
         .section {
-            margin-bottom: 35px;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .section-title {
-            color: #667eea;
-            font-size: 1.3em;
-            margin-bottom: 15px;
+        .section h2 {
+            color: #495057;
+            border-bottom: 2px solid #FF6B6B;
             padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
+            margin-bottom: 20px;
+        }
+        .section p {
+            color: #6c757d;
+            margin-bottom: 20px;
         }
         .error-list {
             list-style: none;
+            display: grid;
+            gap: 15px;
         }
         .error-item {
-            margin-bottom: 12px;
-            padding: 15px;
+            padding: 12px;
             background: #f8f9fa;
-            border-radius: 8px;
-            transition: all 0.3s;
+            border-radius: 6px;
+            transition: background 0.2s;
         }
         .error-item:hover {
             background: #e9ecef;
-            transform: translateX(5px);
         }
         .error-link {
+            display: flex;
+            align-items: center;
             text-decoration: none;
-            color: #667eea;
-            font-weight: 600;
-            font-size: 0.95em;
-        }
-        .error-link:hover {
-            color: #764ba2;
+            color: inherit;
         }
         .error-desc {
-            color: #666;
-            margin-top: 5px;
+            color: #6c757d;
+            margin-top: 8px;
             font-size: 0.9em;
             line-height: 1.5;
         }
         .method {
-            display: inline-block;
-            padding: 3px 8px;
+            font-weight: bold;
+            color: white;
+            padding: 4px 12px;
             border-radius: 4px;
-            font-size: 0.75em;
-            font-weight: 700;
-            margin-right: 8px;
+            margin-right: 12px;
+            background: #0d6efd;
+            min-width: 45px;
+            text-align: center;
         }
-        .method-get { background: #28a745; color: white; }
-        .method-post { background: #007bff; color: white; }
-        .method-delete { background: #dc3545; color: white; }
+        .method-get { background: #0d6efd; }
+        .method-post { background: #0d6efd; }
+        .method-delete { background: #0d6efd; }
+        .path {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            color: #495057;
+        }
         .badge {
             display: inline-block;
             padding: 3px 8px;
@@ -101,6 +108,10 @@
         .note strong {
             color: #856404;
         }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
         
         /* Modal styles */
         .modal {
@@ -118,17 +129,17 @@
             background-color: #fff;
             margin: 5% auto;
             padding: 0;
-            border-radius: 10px;
+            border-radius: 8px;
             width: 80%;
             max-width: 700px;
-            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             animation: slideDown 0.3s;
         }
         .modal-header {
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #FF6B6B;
             color: white;
-            border-radius: 10px 10px 0 0;
+            border-radius: 8px 8px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -160,7 +171,7 @@
             font-size: 0.9em;
             white-space: pre-wrap;
             word-wrap: break-word;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #0d6efd;
         }
         .status-success {
             border-left-color: #28a745;
@@ -171,11 +182,11 @@
         .loading {
             text-align: center;
             padding: 20px;
-            color: #666;
+            color: #6c757d;
         }
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #FF6B6B;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -203,17 +214,18 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="header">
         <h1>🚀 FiberLog - GoErrorKit Demo</h1>
-        <p class="subtitle">Demo GoErrorKit với Multi-Layer Architecture - Error tracking từ Service Layer đến API Layer</p>
-        
-        <div class="section">
-            <h2 class="section-title">⚡ Panic Errors (Recovered)</h2>
+        <p>Demo GoErrorKit với Multi-Layer Architecture - Error tracking từ Service Layer đến API Layer</p>
+    </div>
+    
+    <div class="section">
+        <h2>⚡ Panic Errors (Recovered)</h2>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/panic/division" class="error-link">
                         <span class="method method-get">GET</span>
-                        /panic/division
+                        <span class="path">/panic/division</span>
                         <span class="badge badge-panic">PANIC</span>
                     </a>
                     <div class="error-desc">
@@ -223,7 +235,7 @@
                 <li class="error-item">
                     <a href="/panic/index" class="error-link">
                         <span class="method method-get">GET</span>
-                        /panic/index
+                        <span class="path">/panic/index</span>
                         <span class="badge badge-panic">PANIC</span>
                     </a>
                     <div class="error-desc">
@@ -233,7 +245,7 @@
                 <li class="error-item">
                     <a href="/panic/stack" class="error-link">
                         <span class="method method-get">GET</span>
-                        /panic/stack
+                        <span class="path">/panic/stack</span>
                         <span class="badge badge-panic">PANIC</span>
                     </a>
                     <div class="error-desc">
@@ -243,17 +255,17 @@
             </ul>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">📦 Service Layer Errors - Demo GoErrorKit với Package khác</h2>
-            <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">
-                ✨ <strong>Errors được throw từ <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">services/</code> package</strong> - 
-                GoErrorKit sẽ báo chính xác file, line, function nơi lỗi xảy ra!
-            </p>
+    <div class="section">
+        <h2>📦 Service Layer Errors - Demo GoErrorKit với Package khác</h2>
+        <p>
+            ✨ <strong>Errors được throw từ <code style="background:#e9ecef;padding:2px 6px;border-radius:3px;">services/</code> package</strong> - 
+            GoErrorKit sẽ báo chính xác file, line, function nơi lỗi xảy ra!
+        </p>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/product/999" class="error-link">
                         <span class="method method-get">GET</span>
-                        /product/999
+                        <span class="path">/product/999</span>
                         <span class="badge badge-4xx">404</span>
                     </a>
                     <div class="error-desc">
@@ -264,7 +276,7 @@
                 <li class="error-item">
                     <a href="/product/123/check-stock" class="error-link">
                         <span class="method method-get">GET</span>
-                        /product/123/check-stock
+                        <span class="path">/product/123/check-stock</span>
                         <span class="badge badge-4xx">400</span>
                     </a>
                     <div class="error-desc">
@@ -275,7 +287,7 @@
                 <li class="error-item">
                     <span class="error-link" data-url="/product/456/reserve?quantity=10" data-method="POST">
                         <span class="method method-post">POST</span>
-                        /product/456/reserve?quantity=10
+                        <span class="path">/product/456/reserve?quantity=10</span>
                         <span class="badge badge-4xx">400</span>
                     </span>
                     <div class="error-desc">
@@ -287,7 +299,7 @@
                 <li class="error-item">
                     <a href="/product/456/discount?percent=150" class="error-link">
                         <span class="method method-get">GET</span>
-                        /product/456/discount?percent=150
+                        <span class="path">/product/456/discount?percent=150</span>
                         <span class="badge badge-4xx">400</span>
                     </a>
                     <div class="error-desc">
@@ -298,7 +310,7 @@
                 <li class="error-item">
                     <span class="error-link" data-url="/order/create?product_id=123&quantity=1" data-method="POST">
                         <span class="method method-post">POST</span>
-                        /order/create?product_id=123&quantity=1
+                        <span class="path">/order/create?product_id=123&quantity=1</span>
                         <span class="badge badge-4xx">400</span>
                     </span>
                     <div class="error-desc">
@@ -310,7 +322,7 @@
                 <li class="error-item">
                     <span class="error-link" data-url="/order/create?product_id=456&quantity=0" data-method="POST">
                         <span class="method method-post">POST</span>
-                        /order/create?product_id=456&quantity=0
+                        <span class="path">/order/create?product_id=456&quantity=0</span>
                         <span class="badge badge-4xx">400</span>
                     </span>
                     <div class="error-desc">
@@ -322,7 +334,7 @@
                 <li class="error-item">
                     <span class="error-link" data-url="/order/ORD-shipped/cancel" data-method="DELETE">
                         <span class="method method-delete">DELETE</span>
-                        /order/ORD-shipped/cancel
+                        <span class="path">/order/ORD-shipped/cancel</span>
                         <span class="badge badge-4xx">400</span>
                     </span>
                     <div class="error-desc">
@@ -334,7 +346,7 @@
                 <li class="error-item">
                     <span class="error-link" data-url="/order/ORD-invalid-card/payment?amount=100" data-method="POST">
                         <span class="method method-post">POST</span>
-                        /order/ORD-invalid-card/payment?amount=100
+                        <span class="path">/order/ORD-invalid-card/payment?amount=100</span>
                         <span class="badge badge-5xx">502</span>
                     </span>
                     <div class="error-desc">
@@ -346,7 +358,7 @@
                 <li class="error-item">
                     <span class="error-link" data-url="/order/ORD-123/payment?amount=20000" data-method="POST">
                         <span class="method method-post">POST</span>
-                        /order/ORD-123/payment?amount=20000
+                        <span class="path">/order/ORD-123/payment?amount=20000</span>
                         <span class="badge badge-5xx">504</span>
                     </span>
                     <div class="error-desc">
@@ -358,13 +370,13 @@
             </ul>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">💼 Business Errors - Basic (4xx)</h2>
+    <div class="section">
+        <h2>💼 Business Errors - Basic (4xx)</h2>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/error/business?product_id=123" class="error-link">
                         <span class="method method-get">GET</span>
-                        /error/business?product_id=123
+                        <span class="path">/error/business?product_id=123</span>
                         <span class="badge badge-4xx">404</span>
                     </a>
                     <div class="error-desc">
@@ -374,13 +386,13 @@
             </ul>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">✅ Validation Errors (400)</h2>
+    <div class="section">
+        <h2>✅ Validation Errors (400)</h2>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/error/validation" class="error-link">
                         <span class="method method-get">GET</span>
-                        /error/validation
+                        <span class="path">/error/validation</span>
                         <span class="badge badge-4xx">400</span>
                     </a>
                     <div class="error-desc">
@@ -390,7 +402,7 @@
                 <li class="error-item">
                     <span class="error-link" data-url="/error/validation-body" data-method="POST">
                         <span class="method method-post">POST</span>
-                        /error/validation-body
+                        <span class="path">/error/validation-body</span>
                         <span class="badge badge-4xx">400</span>
                     </span>
                     <div class="error-desc">
@@ -403,13 +415,13 @@
             </ul>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">🔐 Authentication/Authorization Errors (401-403)</h2>
+    <div class="section">
+        <h2>🔐 Authentication/Authorization Errors (401-403)</h2>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/error/auth" class="error-link">
                         <span class="method method-get">GET</span>
-                        /error/auth
+                        <span class="path">/error/auth</span>
                         <span class="badge badge-4xx">401</span>
                     </a>
                     <div class="error-desc">
@@ -419,13 +431,13 @@
             </ul>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">🌐 External Service Errors (502-504)</h2>
+    <div class="section">
+        <h2>🌐 External Service Errors (502-504)</h2>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/error/external?service=payment" class="error-link">
                         <span class="method method-get">GET</span>
-                        /error/external?service=payment
+                        <span class="path">/error/external?service=payment</span>
                         <span class="badge badge-5xx">502</span>
                     </a>
                     <div class="error-desc">
@@ -435,7 +447,7 @@
                 <li class="error-item">
                     <a href="/error/external?service=shipping" class="error-link">
                         <span class="method method-get">GET</span>
-                        /error/external?service=shipping
+                        <span class="path">/error/external?service=shipping</span>
                         <span class="badge badge-5xx">503</span>
                     </a>
                     <div class="error-desc">
@@ -445,7 +457,7 @@
                 <li class="error-item">
                     <a href="/error/external?service=notification" class="error-link">
                         <span class="method method-get">GET</span>
-                        /error/external?service=notification
+                        <span class="path">/error/external?service=notification</span>
                         <span class="badge badge-5xx">504</span>
                     </a>
                     <div class="error-desc">
@@ -455,13 +467,13 @@
             </ul>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">⚙️ System Errors (500)</h2>
+    <div class="section">
+        <h2>⚙️ System Errors (500)</h2>
             <ul class="error-list">
                 <li class="error-item">
                     <a href="/error/system" class="error-link">
                         <span class="method method-get">GET</span>
-                        /error/system
+                        <span class="path">/error/system</span>
                         <span class="badge badge-5xx">500</span>
                     </a>
                     <div class="error-desc">
@@ -471,6 +483,62 @@
             </ul>
         </div>
 
+    <div class="section">
+        <h2>🔄 Wrap Errors - GoErrorKit v0.1.5</h2>
+        <p>
+            ✨ <strong>Các hàm mới trong GoErrorKit v0.1.5:</strong> Wrap errors từ thư viện bên thứ 3 hoặc standard library
+            để có đầy đủ thông tin logging và tracking!
+        </p>
+            <ul class="error-list">
+                <li class="error-item">
+                    <a href="/error/wrap" class="error-link">
+                        <span class="method method-get">GET</span>
+                        <span class="path">/error/wrap</span>
+                        <span class="badge badge-5xx">500</span>
+                    </a>
+                    <div class="error-desc">
+                        🔄 <strong>Wrap(err)</strong> - Wrap error cơ bản<br>
+                        Chuyển error thông thường thành GoErrorKit error → Tự động capture location và stack trace
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/error/wrap-message" class="error-link">
+                        <span class="method method-get">GET</span>
+                        <span class="path">/error/wrap-message</span>
+                        <span class="badge badge-5xx">500</span>
+                    </a>
+                    <div class="error-desc">
+                        💬 <strong>WrapWithMessage(err, msg)</strong> - Thêm Context<br>
+                        Wrap error và thêm message/context để làm rõ ngữ cảnh lỗi xảy ra
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/error/wrap-data" class="error-link">
+                        <span class="method method-get">GET</span>
+                        <span class="path">/error/wrap-data</span>
+                        <span class="badge badge-5xx">500</span>
+                    </a>
+                    <div class="error-desc">
+                        📊 <strong>Wrap + WithData</strong> - Thêm Metadata<br>
+                        Wrap error và thêm metadata (endpoint, method, user_id, retry_count...) để debug dễ dàng hơn
+                    </div>
+                </li>
+                <li class="error-item">
+                    <a href="/error/wrap-callchain" class="error-link">
+                        <span class="method method-get">GET</span>
+                        <span class="path">/error/wrap-callchain</span>
+                        <span class="badge badge-5xx">500</span>
+                    </a>
+                    <div class="error-desc">
+                        🔗 <strong>Wrap + WithCallChain</strong> - Debug Phức Tạp<br>
+                        Wrap error và thêm call chain để trace được flow của error qua nhiều function<br>
+                        Demo: wrapWithCallChainHandler → processUserData → validateUserData/callExternalService
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+    <div class="section">
         <div class="note">
             <strong>📌 Lưu ý:</strong> Tất cả lỗi đều được xử lý tự động bởi ErrorHandlerMiddleware 
             và log ra console với đầy đủ thông tin (request_id, error_type, location, call_chain, etc.)
@@ -595,12 +663,7 @@ ${error.message}
                 });
             });
             
-            // Các link GET vẫn hoạt động bình thường (mở tab mới)
-            document.querySelectorAll('a.error-link').forEach(link => {
-                if (link.href && !link.hasAttribute('data-url')) {
-                    link.setAttribute('target', '_blank');
-                }
-            });
+            // Các link GET sẽ mở trong cùng tab
         });
     </script>
 </body>
