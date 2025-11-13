@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/techmaster-vietnam/goerrorkit"
-	fiberadapter "github.com/techmaster-vietnam/goerrorkit/adapters/fiber"
 )
 
 // ============================================================================
@@ -100,7 +99,7 @@ func main() {
 	// Middleware
 	app.Use(requestid.New())
 	app.Use(logger.New())
-	app.Use(fiberadapter.ErrorHandler()) // Sử dụng goerrorkit middleware
+	app.Use(goerrorkit.FiberErrorHandler()) // Middleware xử lý error
 
 	// Routes - Home
 	app.Get("/", homeHandler)

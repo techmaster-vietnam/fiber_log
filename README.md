@@ -18,7 +18,6 @@ go get github.com/techmaster-vietnam/goerrorkit
 import (
     "github.com/gofiber/fiber/v2"
     "github.com/techmaster-vietnam/goerrorkit"
-    "github.com/techmaster-vietnam/goerrorkit/fiberadapter"
 )
 ```
 
@@ -61,7 +60,7 @@ goerrorkit.ConfigureForApplication("main")
 
 ```go
 app := fiber.New()
-app.Use(fiberadapter.ErrorHandler())
+app.Use(goerrorkit.FiberErrorHandler()) // Middleware xử lý error
 ```
 
 **Tác dụng**: 

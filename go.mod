@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.9
-	github.com/techmaster-vietnam/goerrorkit v0.1.5
+	github.com/techmaster-vietnam/goerrorkit v0.1.6
 )
 
 require (
